@@ -1,33 +1,77 @@
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Button, FlatList, StyleSheet, Text, View } from 'react-native';
+import GoalItem from './components/GoalItem';
+import GoalInput from './components/GoalInput';
+import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
+  const [listOfGoals, setListOfGoals] = useState<string[]>([]);
+  const [modalVisible, setModalIsVisable] = useState(false);
+  const [enteredGoalText, setEnteredGoalText] = useState<string | undefined>(
+    ''
+  );
+
+  const goalInputHandler = (enteredText: string): void => {
+    setEnteredGoalText(enteredText);
+  };
+  const addGoalHandler = (): void => {
+    if (enteredGoalText === undefined || enteredGoalText === '') {
+      return;
+    }
+    if (listOfGoals.includes(enteredGoalText)) {
+      return;
+    }
+    setListOfGoals((prev) => [...prev, enteredGoalText] as string[]);
+    setEnteredGoalText('');
+    modelToggle();
+  };
+  const removeGoalHander = (key: string): void | null => {
+    return setListOfGoals((prev) => prev.filter((x) => x !== key));
+  };
+  const modelToggle = (): void => {
+    setModalIsVisable((prev) => !prev);
+  };
+
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.inputContainer}>
-        <TextInput placeholder="Your course goal!" style={styles.textInput} />
-        <Button title="Add Goal" />
+    <>
+      <StatusBar style="light" />
+      <View style={styles.appContainer}>
+        <Button title="Add New Goal" color="#5e0acc" onPress={modelToggle} />
+        <GoalInput
+          modelToggle={modelToggle}
+          visible={modalVisible}
+          enteredGoalText={enteredGoalText}
+          addGoalHandler={addGoalHandler}
+          goalInputHandler={goalInputHandler}
+        />
+        <View style={styles.goalsContainer}>
+          {enteredGoalText === '' ? (
+            <Text style={{ color: 'white' }}>Please Enter a goal</Text>
+          ) : (
+            <Text style={{ color: 'white' }}>List of Goals</Text>
+          )}
+          <FlatList
+            data={listOfGoals}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <GoalItem item={item} removeGoalHander={removeGoalHander} />
+            )}
+          />
+        </View>
       </View>
-      <View style={styles.secondView}>
-        <Text>List of Goals</Text>
-      </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   appContainer: {
-    padding: 50,
+    paddingTop: 50,
+    paddingHorizontal: 16,
     display: 'flex',
+    flex: 1,
+    backgroundColor: '#1e085a',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#cccccc',
-    width: '80%',
-    marginRight: 8,
-    padding: 8,
+  goalsContainer: {
+    flex: 5,
   },
 });
